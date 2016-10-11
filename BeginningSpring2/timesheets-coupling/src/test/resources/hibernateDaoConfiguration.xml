@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:p="http://www.springframework.org/schema/p"
+   xsi:schemaLocation=
+     "http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+  <bean id="dataSource" 
+    class="org.springframework.jdbc.datasource.DriverManagerDataSource"
+    destroy-method="close"
+    p:driverClassName="org.hsqldb.jdbcDriver"
+    p:url="jdbc:hsqldb:mem:JdbcDaoTest"
+    p:username="sa"
+    p:password=""/>
+    
+  <bean id="jdbcUserAccountDao" 
+    class="com.apress.timesheets.dao.jdbc.JdbcUserAccountDaoImpl"
+    p:dataSource-ref="dataSource"/>
+   
+  <bean id="sessionFactory"
+    class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean"
+    p:dataSource-ref="dataSource">
+    <property name="annotatedClasses">
+      <list>
+         <value>com.apress.timesheets.entity.UserRole</value>
+         <value>com.apress.timesheets.entity.UserAccount</value>
+         <value>com.apress.timesheets.entity.Period</value>
+         <value>com.apress.timesheets.entity.RateType</value>
+         <value>com.apress.timesheets.entity.Rate</value>
+         <value>com.apress.timesheets.entity.Timesheet</value>
+      </list>
+    </property>
+    <property name="hibernateProperties">
+      <props>
+         <prop key="hibernate.dialect">
+            org.hibernate.dialect.HSQLDialect
+         </prop>
+         <prop key="hibernate.show_sql">true</prop>
+      </props>
+    </property>
+  </bean>
+  
+  <bean id="hibernateUserAccountDao" 
+    class="com.apress.timesheets.dao.hibernate.HibernateUserAccountDaoImpl"
+    p:sessionFactory-ref="sessionFactory"/>
+    
+  <bean id="userAccountService"
+    class="com.apress.timesheets.service.UserAccountServiceImpl"
+    p:userAccountDao-ref="hibernateUserAccountDao"/>
+
+</beans>

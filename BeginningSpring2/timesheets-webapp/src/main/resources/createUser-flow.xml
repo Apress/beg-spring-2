@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow
+   xmlns="http://www.springframework.org/schema/webflow"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow-1.0.xsd">
+
+   <start-state idref="createUser"/>
+   
+   <view-state id="createUser" view="admin/createUser">
+      <render-actions>
+         <action bean="createUserAction" method="setupForm"/>
+      </render-actions>
+      <transition on="preview" to="previewUser">
+         <action bean="createUserAction" method="bindAndValidate"/>      
+      </transition>
+      <transition on="cancel" to="listUsers"/>
+   </view-state>
+   
+   <view-state id="previewUser" view="admin/previewUser">
+      <transition on="edit" to="createUser"/>
+      <transition on="save" to="listUsers"> 
+         <action bean="createUserAction" method="save"/>
+      </transition>
+   </view-state>
+
+   <end-state id="listUsers" view="externalRedirect:/admin"/>
+
+</flow>

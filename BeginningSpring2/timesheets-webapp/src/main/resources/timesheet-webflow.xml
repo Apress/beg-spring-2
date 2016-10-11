@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:flow="http://www.springframework.org/schema/webflow-config"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+           http://www.springframework.org/schema/webflow-config
+           http://www.springframework.org/schema/webflow-config/spring-webflow-config-1.0.xsd">
+
+   <bean name="flowController" class="org.springframework.webflow.executor.mvc.FlowController">
+      <property name="flowExecutor" ref="flowExecutor"/>
+   </bean>
+
+   <flow:executor id="flowExecutor" registry-ref="flowRegistry"/>
+   
+   <flow:registry id="flowRegistry">  
+      <!-- Note: Flow IDs will be deduced from the filename -->
+      <flow:location path="classpath:**-flow.xml"/>
+   </flow:registry>
+   
+   <bean id="createUserAction" class="com.apress.timesheets.mvc.webflow.CreateUserAction">
+      <property name="formObjectName" value="command"/>
+      <property name="formObjectClass" value="com.apress.timesheets.mvc.webflow.CreateUserForm"/>
+      <property name="userAccountService" ref="userAccountService"/>
+   </bean>
+
+</beans>

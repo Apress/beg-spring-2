@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:aop="http://www.springframework.org/schema/aop"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
+
+<!-- Option #1: Explicit Proxy Factory configured with an interceptor. The
+                "real" service implementation is renamed to timesheetServiceRaw
+                and beans are injected with beans from the factory instead. 
+	<bean id="timesheetService" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="proxyInterfaces">
+			<value>com.apress.timesheets.service.TimesheetService</value>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>timesheetInterceptor</value>
+			</list>
+		</property>
+		<property name="target" ref="timesheetServiceRaw"/>
+	</bean>
+
+	<bean id="timesheetInterceptor" class="com.apress.timesheets.customaop.TimesheetInterceptor"/>
+ -->
+
+<!-- Option #2: Use of DefaultPointcutAdvisors. The Spring BeanFactory will generate proxy
+                objects for the beans indicated by the pointcut when beans are obtained from
+                the factory.
+-->
+<!-- Configuring the Interceptor using a pair of suitable pointcuts
+	<bean class="org.springframework.aop.support.DefaultPointcutAdvisor">
+		<property name="advice" ref="timesheetInterceptor"/>
+		<property name="pointcut" ref="staticPointcut"/>
+	</bean>
+	<bean id="staticPointcut" class="com.apress.timesheets.customaop.TimesheetStaticPointcutImpl"/>
+
+	<bean class="org.springframework.aop.support.DefaultPointcutAdvisor">
+		<property name="advice" ref="timesheetInterceptor"/>
+		<property name="pointcut" ref="returningPointcut"/>
+	</bean>
+ 	<bean id="returningPointcut" class="com.apress.timesheets.customaop.TimesheetReturningStaticPointcutImpl"/>
+
+	<bean id="timesheetInterceptor" class="com.apress.timesheets.customaop.TimesheetInterceptor"/>
+ -->
+
+<!-- The dynamic pointcut will not bother to invoke the advice when the administrative user is present  
+-->
+	<bean id="timesheetAfterReturningAdvice" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+		<property name="advice">
+			<bean class="com.apress.timesheets.customaop.TimesheetAfterReturningAdvice"/>
+		</property>
+		<property name="pointcut" ref="dynamicPointcut"/>
+	</bean>
+	<bean id="dynamicPointcut" class="com.apress.timesheets.customaop.TimesheetDynamicPointcutImpl"/>
+
+<!-- The static pointcut will always invoke the advice for 
+     the matching method, but consequently it does not itself need to be
+     called after the initial proxy creation at load-time.  
+	<bean id="timesheetBeforeAdvice" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+		<property name="advice">
+			<bean class="com.apress.timesheets.customaop.TimesheetBeforeAdvice"/>
+		</property>
+		<property name="pointcut" ref="staticPointcut"/>
+	</bean>
+	<bean id="staticPointcut" class="com.apress.timesheets.customaop.TimesheetStaticPointcutImpl"/>
+-->
+
+<!-- 
+	<bean id="timesheetAfterReturningAdvice" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+		<property name="advice">
+			<bean class="com.apress.timesheets.customaop.TimesheetAfterReturningAdvice"/>
+		</property>
+		<property name="pointcut" ref="returningPointcut"/>
+	</bean>
+ 	<bean id="returningPointcut" class="com.apress.timesheets.customaop.TimesheetReturningStaticPointcutImpl"/>
+-->
+  
+<!--  Option #3: Usage for AspectJ annotation configuration. Pointcuts and Advice objects are
+                 configured using annotations and the proxy is auto-generated from these.
+   <aop:aspectj-autoproxy/>
+-->
+   
+<!-- Set of AspectJ pointcuts external to the advice implementation - this is redundant
+     as they are duplicated within the advice for the second example. 
+   <bean id="securityPointcuts" class="com.apress.timesheets.TimesheetSecurityPointcuts" />
+-->
+
+<!-- XML Configuration of AspectJ style pointcuts and advice. Again the proxy is auto-generated to
+     invoke the advice methods.
+   <aop:config>
+      <aop:pointcut id="listTimesheets" expression="execution(* com.apress.timesheets.service.TimesheetService*.list*(..)) and args(account)" />
+      <aop:pointcut id="findTimesheet" expression="execution(* com.apress.timesheets.service.TimesheetService*.findTimesheet(..))" />
+      
+      <aop:aspect ref="securityAdvice">
+         <aop:before method="list"  
+            arg-names="account" 
+            pointcut-ref="listTimesheets"/>
+            
+         <aop:after-returning 
+            method="findTimesheet" 
+            returning="timesheet"
+            pointcut-ref="findTimesheet"/>
+      </aop:aspect>
+   </aop:config>
+ -->
+
+   <!-- The bean implementing the desired extra behavior including
+        AspectJ annotations. -->
+   <bean id="securityAdvice" class="com.apress.timesheets.TimesheetSecurityAdvice" />
+
+</beans>

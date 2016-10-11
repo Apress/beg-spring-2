@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+			    http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+   <!-- Determines how views are resolved to rendering implementations; we're using JSPs under WEB-INF -->   
+   <bean class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+      <property name="prefix" value="/WEB-INF/jsp/"/>
+      <property name="suffix" value=".jsp"/>
+      <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+   </bean>
+
+   <!-- Determines how URLs are resolved to controllers -->
+    <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+      <property name="mappings">
+         <map>
+            <entry key="/login/**" value-ref="loginHandler"/>
+            <entry key="/accessDenied/**" value-ref="accessDeniedHandler"/>
+            <entry key="/admin" value-ref="adminUserListController"/>
+            <entry key="/admin/list/**" value-ref="adminUserListController"/>
+            <entry key="/admin/view/**" value-ref="adminUserViewController"/>
+            <entry key="/admin/**" value-ref="flowController"/>
+            <entry key="/timesheets/create/**" value-ref="timesheetCreateController"/>            
+            <entry key="/timesheets/view/**" value-ref="timesheetViewController"/>
+            <entry key="/timesheets/update/**" value-ref="timesheetUpdateController"/>
+            <entry key="/timesheets/delete/**" value-ref="timesheetDeleteController"/>
+            <entry key="/timesheets/addPeriod/**" value-ref="periodCreateController"/>
+            <entry key="/timesheets/deletePeriod/**" value-ref="periodDeleteController"/>            
+            <entry key="/timesheets/**" value-ref="timesheetListController"/>
+         </map>
+      </property>
+      <property name="alwaysUseFullPath" value="true"/>
+      <property name="defaultHandler" ref="defaultHandler"/>
+    </bean>
+
+   <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+      <property name="exceptionMappings">
+         <props>
+            <prop key="java.lang.Exception">errors/error</prop>
+            <prop key="com.apress.timesheets.TimesheetSecurityException">errors/access</prop>            
+         </props>
+      </property>
+      <property name="defaultErrorView" value="errors/error"/>
+   </bean>
+
+   <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+      <property name="basename" value="messages"/>
+   </bean>
+  
+   <!-- Bring in the WebFlow configuration -->
+   <import resource="classpath:timesheet-webflow.xml"/>
+
+   <!-- Simple controllers -->
+   <bean id="defaultHandler" class="org.springframework.web.servlet.mvc.ParameterizableViewController">
+      <property name="viewName" value="home"/>
+   </bean>
+
+   <bean id="loginHandler" class="org.springframework.web.servlet.mvc.ParameterizableViewController">
+      <property name="viewName" value="login"/>
+   </bean>
+
+   <bean id="accessDeniedHandler" class="org.springframework.web.servlet.mvc.ParameterizableViewController">
+      <property name="viewName" value="accessDenied"/>
+   </bean>
+
+   <!-- Custom controllers -->
+   <bean id="adminUserListController" class="com.apress.timesheets.mvc.UserListController">
+      <property name="commandClass" value="com.apress.timesheets.mvc.UserListForm"/>
+      <property name="commandName" value="userListForm"/>
+      <property name="formView" value="admin/listUser"/>
+      <property name="successView" value="admin/listUser"/>
+      <property name="userAccountService" ref="userAccountService"/>
+   </bean>
+
+   <bean id="adminUserViewController" class="com.apress.timesheets.mvc.UserViewController">
+      <property name="commandClass" value="com.apress.timesheets.mvc.UserViewForm"/>
+      <property name="commandName" value="command"/>
+      <property name="userView" value="admin/viewUser"/>
+      <property name="regex" value=".*/view/(.*)/?"/>
+      <property name="userAccountService" ref="userAccountService"/>
+   </bean>
+   
+   <bean id="timesheetListController" class="com.apress.timesheets.mvc.TimesheetListController">
+      <property name="commandClass" value="com.apress.timesheets.mvc.TimesheetListForm"/>
+      <property name="commandName" value="command"/>
+      <property name="formView" value="timesheet/list"/>
+      <property name="successView" value="timesheet/list"/>
+      <property name="timesheetService" ref="timesheetService"/>
+   </bean>
+
+   <bean id="timesheetCreateController" class="com.apress.timesheets.mvc.TimesheetCreateController">
+      <property name="commandClass" value="com.apress.timesheets.mvc.TimesheetCreateForm"/>
+      <property name="commandName" value="command"/>
+      <property name="formView" value="timesheet/create"/>
+      <property name="successView" value="redirect:/timesheets"/>
+      <property name="cancelView" value="redirect:/timesheets"/>
+      <property name="cancelParamKey" value="cancel"/>
+      <property name="timesheetService" ref="timesheetService"/>
+   </bean>
+
+   <bean id="timesheetViewController" class="com.apress.timesheets.mvc.TimesheetViewController">
+      <property name="commandClass" value="com.apress.timesheets.mvc.TimesheetViewForm"/>
+      <property name="commandName" value="command"/>
+      <property name="bindOnNewForm" value="true"/>
+      <property name="formView" value="timesheet/view"/>
+      <property name="successView" value="timesheet/view"/>
+      <property name="timesheetService" ref="timesheetService"/>
+   </bean>
+
+   <bean id="timesheetUpdateController" class="com.apress.timesheets.mvc.TimesheetUpdateController">
+      <property name="commandClass" value="com.apress.timesheets.mvc.TimesheetUpdateForm"/>
+      <property name="commandName" value="command"/>
+      <property name="bindOnNewForm" value="true"/>
+      <property name="formView" value="timesheet/update"/>
+      <property name="successView" value="timesheet/view"/>
+      <property name="cancelView" value="redirect:/timesheets"/>
+      <property name="cancelParamKey" value="cancel"/>
+      <property name="timesheetService" ref="timesheetService"/>
+   </bean>
+
+   <bean id="timesheetDeleteController" class="com.apress.timesheets.mvc.TimesheetDeleteController">
+      <property name="commandClass" value="com.apress.timesheets.mvc.TimesheetDeleteForm"/>
+      <property name="commandName" value="command"/>
+      <property name="bindOnNewForm" value="true"/>
+      <property name="formView" value="timesheet/delete"/>
+      <property name="successView" value="redirect:/timesheets"/>
+      <property name="cancelView" value="redirect:/timesheets"/>
+      <property name="cancelParamKey" value="cancel"/>
+      <property name="timesheetService" ref="timesheetService"/>
+   </bean>
+   
+   <bean id="periodCreateController" class="com.apress.timesheets.mvc.PeriodCreateController">
+      <property name="commandClass" value="com.apress.timesheets.mvc.PeriodCreateForm"/>
+      <property name="commandName" value="command"/>
+      <property name="bindOnNewForm" value="true"/>
+      <property name="formView" value="timesheet/createPeriod"/>
+      <property name="successView" value="redirect:/timesheets"/>
+      <property name="cancelView" value="redirect:/timesheets"/>
+      <property name="cancelParamKey" value="cancel"/>
+      <property name="timesheetService" ref="timesheetService"/>
+      <property name="validator">
+         <bean class="com.apress.timesheets.mvc.PeriodCreateValidator"/>
+      </property>
+   </bean>
+
+   <bean id="periodDeleteController" class="com.apress.timesheets.mvc.PeriodDeleteController">
+      <property name="commandClass" value="com.apress.timesheets.mvc.PeriodDeleteForm"/>
+      <property name="commandName" value="command"/>
+      <property name="bindOnNewForm" value="true"/>
+      <property name="formView" value="timesheet/deletePeriod"/>
+      <property name="successView" value="redirect:/timesheets"/>
+      <property name="cancelView" value="redirect:/timesheets"/>
+      <property name="cancelParamKey" value="cancel"/>
+      <property name="timesheetService" ref="timesheetService"/>
+   </bean>
+
+
+
+</beans>

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+ 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation=
+      "http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+       http://www.springframework.org/schema/tx 
+       http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
+
+   <!-- Complain loudly if @Required annotated attributes are not honoured in the configuration -->
+   <bean class="org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor"/>
+
+   <!-- Bring in the Security configuration -->
+   <import resource="classpath:timesheet-security.xml"/>
+   <import resource="classpath:timesheet-aop.xml"/>   
+
+   <!-- Configure the remotely available services -->   
+   <import resource="classpath:timesheet-remote.xml"/>
+
+   <!-- DB configuration -->
+    <bean id="dataSource" destroy-method="close" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="org.hsqldb.jdbcDriver"/>
+        <property name="url" value="jdbc:hsqldb:file:timesheet;SHUTDOWN=true"/>
+        <property name="username" value="sa"/>
+        <property name="password" value=""/>
+    </bean>   
+       
+   <!-- Hibernate configuration -->
+   <bean id="sessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+      <property name="dataSource" ref="dataSource"/>
+      <property name="annotatedClasses">
+         <list>
+            <value>com.apress.timesheets.entity.Period</value>
+            <value>com.apress.timesheets.entity.Rate</value>
+            <value>com.apress.timesheets.entity.RateType</value>
+            <value>com.apress.timesheets.entity.Timesheet</value>
+            <value>com.apress.timesheets.entity.UserAccount</value>
+            <value>com.apress.timesheets.entity.UserRole</value>
+            <value>com.apress.timesheets.security.AcegiGrantedAuthority</value>
+            <value>com.apress.timesheets.security.AcegiUserDetails</value>
+         </list>
+      </property>
+      <property name="hibernateProperties">
+         <props>
+            <prop key="hibernate.connection.pool_size">0</prop>
+            <prop key="hibernate.show_sql">true</prop>
+            <prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop>
+            <prop key="hibernate.hbm2ddl.auto">update</prop>
+         </props>
+      </property>
+   </bean>
+   
+   <!-- DAO configurations -->   
+   <bean id="securityDao" class="com.apress.timesheets.dao.hibernate.HibernateSecurityDaoImpl">
+      <property name="sessionFactory" ref="sessionFactory"/>
+      <property name="userAccountDao" ref="userAccountDao"/>
+      <property name="passwordEncoder" ref="passwordEncoder"/>
+   </bean>
+   
+   <bean id="userAccountDao" class="com.apress.timesheets.dao.hibernate.HibernateUserAccountDaoImpl">
+      <property name="sessionFactory" ref="sessionFactory"/>
+   </bean>
+
+   <bean id="timesheetDao" class="com.apress.timesheets.dao.hibernate.HibernateTimesheetDaoImpl">
+      <property name="sessionFactory" ref="sessionFactory"/>
+   </bean>
+
+   <!-- Service configuration -->
+   <bean id="acegiUserDetailsService" class="com.apress.timesheets.security.AcegiUserDetailsService">
+      <property name="securityDao" ref="securityDao"/>
+   </bean>
+
+   <bean id="userAccountService" class="com.apress.timesheets.service.UserAccountServiceImpl">
+      <property name="userAccountDao" ref="userAccountDao"/>
+      <property name="securityDao" ref="securityDao"/>
+   </bean>
+
+   <bean id="timesheetService" class="com.apress.timesheets.service.TimesheetServiceImpl">
+      <property name="timesheetDao" ref="timesheetDao"/>
+      <property name="emailDao" ref="velocityImageEmailDao"/>
+   </bean>
+   
+   <!-- Transaction configuration    -->
+   <bean id="txManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+     <property name="sessionFactory" ref="sessionFactory" />
+   </bean>
+   
+   <tx:annotation-driven transaction-manager="txManager"/>
+   
+   <!-- 
+  <tx:advice id="txAdvice" transaction-manager="txManager">
+    <tx:attributes>
+      <tx:method name="" isolation="DEFAULT" no-rollback-for="" propagation="REQUIRED" timeout="-1" read-only="false" rollback-for="" />
+      <tx:method name="get*" read-only="true" />
+      <tx:method name="load*"/>
+      <tx:method name="find*"/>
+      <tx:method name="list*"/>
+      <tx:method name="create*"/>
+      <tx:method name="delete*"/>
+      <tx:method name="update*"/>
+    </tx:attributes>
+  </tx:advice>
+
+  <aop:config>
+    <aop:pointcut id="timesheetServiceOperations" expression="execution(* com.apress.timesheets.service.*Service*.*(..))"/>
+    <aop:advisor advice-ref="txAdvice" pointcut-ref="timesheetServiceOperations"/>
+  </aop:config>
+    -->
+   <!-- Helper bean to auto-populate the empty database -->
+   <bean class="com.apress.timesheets.util.PopulateDataProcessor">
+      <property name="securityDao" ref="securityDao"/>
+      <property name="timesheetDao" ref="timesheetDao"/>
+   </bean>
+
+   <!-- Email config -->
+   <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+     <property name="host" value="smtp.blueyonder.co.uk"/>
+   </bean>
+   
+   <bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+      <property name="velocityProperties">
+         <value>
+            resource.loader=class
+            class.resource.loader.class=org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
+         </value>
+      </property>
+   </bean>  
+
+   <bean id="abstractEmailDao" abstract="true">
+      <property name="fromAddress" value="timesheets@example.com"/>
+      <property name="rcptAddress" value="dave@paperstack.com"/>
+      <property name="mailSender" ref="mailSender"/>
+      <property name="subject" value="Timesheet Update Message"/>
+   </bean>
+
+   <bean id="simpleEmailDao" class="com.apress.timesheets.mail.SimpleMailDaoImpl" parent="abstractEmailDao"/>
+
+   <bean id="velocityEmailDao" class="com.apress.timesheets.mail.VelocityMailDaoImpl" parent="abstractEmailDao">
+      <property name="velocityEngine" ref="velocityEngine"/>
+      <property name="velocityMacroPath" value="velocity/timesheet/update.vm"/>
+   </bean>
+
+   <bean id="velocityImageEmailDao" class="com.apress.timesheets.mail.VelocityImageMailDaoImpl" parent="abstractEmailDao">
+      <property name="velocityEngine" ref="velocityEngine"/>
+      <property name="velocityMacroPath" value="velocity/timesheet/attachments.vm"/>
+      <property name="attachment" value="classpath:strawberry.jpg"/>
+      <property name="image" value="classpath:strawberry.jpg"/>
+   </bean>
+
+</beans>

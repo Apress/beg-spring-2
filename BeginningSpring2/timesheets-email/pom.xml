@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<project>
+   <parent>
+      <artifactId>timesheets</artifactId>
+      <groupId>com.apress.timesheets</groupId>
+      <version>1.0-SNAPSHOT</version>
+   </parent>
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>com.apress.timesheets</groupId>
+   <artifactId>timesheets-email</artifactId>
+   <name>Timesheets Email library</name>
+   <version>1.0-SNAPSHOT</version>
+   <url>http://maven.apache.org</url>
+   <dependencies>
+      <dependency>
+         <groupId>com.apress.timesheets</groupId>
+         <artifactId>timesheets-core</artifactId>
+         <version>1.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <version>3.8.1</version>
+         <scope>test</scope>
+      </dependency>
+   </dependencies>
+</project>

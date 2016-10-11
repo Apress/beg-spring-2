@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans
+             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+   <bean id="rmiUserAccountService" class="org.springframework.remoting.rmi.RmiProxyFactoryBean">
+      <property name="serviceUrl" value="rmi://localhost:1001/UserAccountService" />
+      <property name="serviceInterface" value="com.apress.timesheets.service.UserAccountService"/>
+   </bean>
+   
+   <bean id="invokerUserAccountService" class="org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean">
+      <property name="serviceUrl" value="http://localhost:8080/timesheet/invoker/userAccountService"/>
+      <property name="serviceInterface" value="com.apress.timesheets.service.UserAccountService"/>
+   </bean>   
+
+   <bean id="hessianUserAccountService" class="org.springframework.remoting.caucho.HessianProxyFactoryBean">
+      <property name="serviceUrl" value="http://localhost:8080/timesheet/hessian/userAccountService"/>
+      <property name="serviceInterface" value="com.apress.timesheets.hessian.HessianUserAccountService"/>
+   </bean>
+ 
+   <bean id="burlapUserAccountService" class="org.springframework.remoting.caucho.BurlapProxyFactoryBean">
+      <property name="serviceUrl" value="http://localhost:8080/timesheet/burlap/userAccountService"/>
+      <property name="serviceInterface" value="com.apress.timesheets.burlap.BurlapUserAccountService"/>
+   </bean>
+   
+   <bean id="soapUserAccountService" class="org.springframework.remoting.jaxrpc.JaxRpcPortProxyFactoryBean">
+      <property name="serviceFactoryClass">
+         <value>org.apache.axis.client.ServiceFactory</value>
+      </property>
+      <property name="serviceInterface" value="com.apress.timesheets.soap.SoapUserAccountService"/>
+      <property name="wsdlDocumentUrl" value="http://localhost:8080/timesheet/service/SoapUserAccountService?wsdl"/>
+      <property name="namespaceUri" value="urn:Timesheet"/>
+      <property name="serviceName" value="SoapUserAccountServiceService"/>	    
+      <property name="portName" value="SoapUserAccountService"/>
+   </bean>   
+
+   
+</beans>

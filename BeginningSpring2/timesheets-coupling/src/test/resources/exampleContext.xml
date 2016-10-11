@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:p="http://www.springframework.org/schema/p"
+   xsi:schemaLocation=
+     "http://www.springframework.org/schema/beans
+	  http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+   <bean id="smtp" class="com.apress.coupling.SmtpImpl"/>
+
+   <bean id="soap" class="com.apress.coupling.SoapImpl" />
+
+   <bean id="looseSmtp" class="com.apress.coupling.LooselyCoupled">
+      <constructor-arg ref="smtp" />
+   </bean>
+
+   <bean id="looseSoap" class="com.apress.coupling.LooselyCoupled">
+      <constructor-arg ref="soap" />
+   </bean>
+   
+   <bean id="userAccount" class="com.apress.coupling.UserAccount">
+      <constructor-arg index="0" value="jdoe"/>
+      <constructor-arg index="1" value="pa55word"/>
+   </bean>
+
+   <bean id="describer" class="com.apress.coupling.ResourceConsumer">
+      <property name="resources">
+         <list>
+            <value>classpath:config.xml</value>
+            <value>file:config.xml</value>
+            <value>http://example.com/config.xml</value>
+            <value>ftp://config.xml</value>
+            <value>config.xml</value>
+         </list>
+      </property>
+   </bean>
+
+</beans>

@@ -1,0 +1,72 @@
+/* Timesheet Application Stylesheet */
+body { 
+	font-family: arial, sans-serif;
+}
+
+a.nav:link { 
+	text-decoration: none;
+}
+
+a.nav:visited { 
+	text-decoration: none;
+}
+
+a.nav:hover { 
+	text-decoration: underline;
+}
+
+form {
+	border: 1px dotted #333;
+	padding: 0.5em;
+	margin: 0px auto;
+}
+
+form span.error {
+	clear: both;
+	padding-top: 1em;
+	color: red;
+}
+
+form label {
+	clear: both;
+	padding-top: 1em;
+	display: block;
+}
+
+span.label {
+	font-weight: bold;
+}
+
+div.command {
+	float: right;
+	border: 1px dotted #333;
+	padding: 0.5em;
+	margin: 0px auto;	
+}
+
+div.command a {
+	display: block;
+}
+
+table { 
+	width: 100%;
+	background-color: #fafafa;
+	border: 1px solid;
+	border-collapse: collapse;
+	border-spacing: 0px;
+	margin-top: 0px;
+}
+
+table th { 
+	border-bottom: 1px dotted #6699cc;
+	background-color: white;
+	text-align: left;
+	padding-left: 3px;
+}
+
+table td { 
+	border-bottom: 1px dotted #6699cc;
+	background-color: white;
+	text-align: left;
+	padding-left: 3px;
+}

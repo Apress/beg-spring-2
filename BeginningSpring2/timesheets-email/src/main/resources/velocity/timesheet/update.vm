@@ -1,0 +1,7 @@
+## Sent whenever a timesheet is updated
+<html>
+   <body>
+      <h3>Timesheet updated</h3>
+      <p>User ${timesheet.consultant.accountName} has updated one of their timesheets.</p>
+   </body>
+</html>

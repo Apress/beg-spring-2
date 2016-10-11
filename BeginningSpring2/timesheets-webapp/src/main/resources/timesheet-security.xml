@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans
+             http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+   <!-- This defines the filters that apply to specific sets of resources -->
+   <!-- Note: The URLs you specify with these settings must be all 
+      lower case (it will cause an error at startup otherwise) -->
+   <bean id="acegiRequestFilter"
+      class="org.acegisecurity.util.FilterChainProxy">
+      <property name="filterInvocationDefinitionSource">
+         <value>
+            CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON
+            PATTERN_TYPE_APACHE_ANT
+            /css/**=channelProcessingFilter,anonymousProcessingFilter
+            /login*=channelProcessingFilter,anonymousProcessingFilter
+            /accessdenied*=channelProcessingFilter,anonymousProcessingFilter
+            /**=channelProcessingFilter,httpSessionContextIntegrationFilter,logoutFilter,authenticationProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,securityInterceptorFilter
+         </value>
+      </property>
+   </bean>
+
+   <!-- Persists authentication credentials into the Session -->
+   <bean id="httpSessionContextIntegrationFilter"
+      class="org.acegisecurity.context.HttpSessionContextIntegrationFilter" />
+
+   <!-- Handles logout processing (takes user to the login page post-logout) -->
+   <bean id="logoutFilter"
+      class="org.acegisecurity.ui.logout.LogoutFilter">
+      <constructor-arg value="/login" />
+      <constructor-arg>
+         <list>
+            <bean
+               class="org.acegisecurity.ui.logout.SecurityContextLogoutHandler" />
+         </list>
+      </constructor-arg>
+   </bean>
+
+   <!-- Enforces SSL -->
+   <bean id="channelProcessingFilter"
+      class="org.acegisecurity.securechannel.ChannelProcessingFilter">
+      <property name="channelDecisionManager">
+         <ref bean="channelDecisionManager" />
+      </property>
+      <property name="filterInvocationDefinitionSource">
+         <value>
+            CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON
+            PATTERN_TYPE_APACHE_ANT
+            /login**=REQUIRES_SECURE_CHANNEL
+            /j_acegi_security_check=REQUIRES_SECURE_CHANNEL
+            /secure/**=REQUIRES_SECURE_CHANNEL
+            /**=REQUIRES_INSECURE_CHANNEL
+         </value>
+      </property>
+   </bean>
+
+   <bean id="channelDecisionManager"
+      class="org.acegisecurity.securechannel.ChannelDecisionManagerImpl">
+      <property name="channelProcessors">
+         <list>
+            <ref bean="secureChannelProcessor" />
+            <ref bean="insecureChannelProcessor" />
+         </list>
+      </property>
+   </bean>
+
+   <bean id="secureChannelProcessor"
+      class="org.acegisecurity.securechannel.SecureChannelProcessor"/>
+
+   <bean id="insecureChannelProcessor"
+      class="org.acegisecurity.securechannel.InsecureChannelProcessor" />
+
+   <!-- If there is no user right granted currently, this filter will add user named "anonymous" with role "ANONYMOUS" -->
+   <bean id="anonymousProcessingFilter"
+      class="org.acegisecurity.providers.anonymous.AnonymousProcessingFilter">
+      <property name="key" value="timesheetAnonymous" />
+      <property name="userAttribute" value="anonymous,ROLE_ANONYMOUS" />
+   </bean>
+
+   <!-- This is the filter that forces and authenticates form based login as required -->
+   <bean id="authenticationProcessingFilter"
+      class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilter">
+      <property name="authenticationManager"
+         ref="authenticationManager" />
+      <property name="authenticationFailureUrl" value="/login" />
+      <property name="defaultTargetUrl" value="/home" />
+      <property name="alwaysUseDefaultTargetUrl" value="false" />
+      <property name="filterProcessesUrl"
+         value="/j_acegi_security_check" />
+   </bean>
+
+   <!-- This is the filter that handles attempts to access disallowed resources  -->
+   <bean id="exceptionTranslationFilter"
+      class="org.acegisecurity.ui.ExceptionTranslationFilter">
+      <property name="authenticationEntryPoint">
+         <bean
+            class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilterEntryPoint">
+            <property name="loginFormUrl" value="/login" />
+            <property name="forceHttps" value="false" />
+         </bean>
+      </property>
+      <property name="accessDeniedHandler">
+         <bean class="org.acegisecurity.ui.AccessDeniedHandlerImpl">
+            <property name="errorPage" value="/accessDenied" />
+         </bean>
+      </property>
+   </bean>
+
+   <!-- This intercepts incoming requests and checks to make sure the active principal
+      has the appropriate roles -->
+   <bean id="securityInterceptorFilter"
+      class="org.acegisecurity.intercept.web.FilterSecurityInterceptor">
+      <property name="authenticationManager"
+         ref="authenticationManager" />
+      <property name="accessDecisionManager" 
+         ref="accessDecisionManager"/>
+      <!-- This defines the roles that are required to access specific sets of resources -->
+      <property name="objectDefinitionSource">
+         <value>
+            CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON
+            PATTERN_TYPE_APACHE_ANT
+            /service/**=ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR
+            /hessian/**=ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR
+            /burlap/**=ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR
+            /invoker/**=ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR
+            /css**=ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR
+            /login=ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR
+            /accessdenied=ROLE_ANONYMOUS,ROLE_USER,ROLE_ADMINISTRATOR
+            /**=ROLE_USER,ROLE_ADMINISTRATOR
+         </value>
+         <!-- Roles MUST be prefixed by ROLE_ -->
+      </property>
+   </bean>
+   
+   <bean id="accessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
+      <!-- We're expecting these things to say "yes" if we ARE allowed access to resources -->
+      <!-- If we don't pass any tests, we default to NOT allowing access -->
+      <property name="allowIfAllAbstainDecisions" value="false" />
+      <!-- These specify that we must have the appropriate role AND we must be authenticated -->
+      <property name="decisionVoters">
+         <list>
+            <bean class="org.acegisecurity.vote.RoleVoter" />
+            <bean
+               class="org.acegisecurity.vote.AuthenticatedVoter" />
+         </list>
+      </property>
+  </bean>
+
+   <!-- Manages the permitted set of ways to authenticate users -->
+   <bean id="authenticationManager"
+      class="org.acegisecurity.providers.ProviderManager">
+      <property name="providers">
+         <list>
+            <ref local="daoAuthentication" />
+            <ref local="anonymousAuthentication" />
+         </list>
+      </property>
+   </bean>
+
+   <!-- This authenticates anonymous users. The key associates this provider with the users created by
+      our anonymous filter -->
+   <bean id="anonymousAuthentication"
+      class="org.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider">
+      <property name="key" value="timesheetAnonymous" />
+   </bean>
+
+   <!-- This uses the userDetailsService to validate incoming user details against the Database -->
+   <bean id="daoAuthentication"
+      class="org.acegisecurity.providers.dao.DaoAuthenticationProvider">
+      <property name="passwordEncoder" ref="passwordEncoder" />
+      <property name="userDetailsService" ref="acegiUserDetailsService" />
+   </bean>
+
+   <!-- This encodes incoming plaintext passwords for comparison against the database -->
+   <bean id="passwordEncoder"
+      class="org.acegisecurity.providers.encoding.Md5PasswordEncoder">
+      <property name="encodeHashAsBase64" value="true" />
+   </bean>
+   
+   <!-- @Secured Annotation configuration -->
+   <bean id="attributes" class="org.acegisecurity.annotation.SecurityAnnotationAttributes"/>
+
+   <bean id="objectDefinitionSource" class="org.acegisecurity.intercept.method.MethodDefinitionAttributes">
+     <property name="attributes" ref="attributes"/>
+   </bean>
+
+   <bean id="securityAnnotationInterceptor" class="org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor">
+     <property name="authenticationManager" ref="authenticationManager"/>
+     <property name="accessDecisionManager" ref="accessDecisionManager"/>
+     <property name="objectDefinitionSource" ref="objectDefinitionSource"/>
+   </bean>
+
+</beans>

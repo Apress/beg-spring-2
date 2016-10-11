@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation=
+     "http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+   <!-- Enable the @Required annotation -->     
+   <bean class="org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor">
+      <property name="requiredAnnotationType" value="com.apress.coupling.config.MyRequired"/>
+   </bean>
+
+   <!-- Declare an example class for setting as a property reference -->   
+   <bean id="ref" class="com.apress.coupling.config.RefExample">
+      <property name="text" value="RefExample"/>
+   </bean>
+     
+   <bean 
+      id="pte" 
+      class="com.apress.coupling.config.PropertyTypeExample">
+      <property name="text" value="Hello World"/>      
+      <property name="list">
+        <list>
+         <value>Mauve</value>
+         <value>Puce</value>
+         <value>Burnt Umber</value>
+         <value>Beige</value>
+        </list> 
+      </property>
+      <property name="set">
+         <set>
+            <value>London</value>
+            <value>Paris</value>
+            <value>Tokyo</value>
+            <value>Washington</value>
+         </set>
+      </property>
+      <property name="map">
+         <map>
+            <entry key="Mammal">
+               <list>
+                  <value>Cat</value>
+                  <value>Dog</value>
+                  <value>Human</value>
+               </list>
+            </entry>
+            <entry key="Fish">
+               <list>
+                  <value>Minnow</value>
+                  <value>Shark</value>
+               </list>
+            </entry>
+         </map>
+      </property>
+      <property name="ref" ref="ref"/>
+   </bean>
+
+</beans>
